@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cold Email Configurator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f4f0;
+      color: #1a1a1a;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 36px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    header p {
+      margin-top: 6px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e8e8e8;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .field-full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: #555;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #1a1a1a;
+      background: #fafafa;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #1a1a1a;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+    }
+
+    input::placeholder { color: #bbb; }
+
+    .hint {
+      font-size: 12px;
+      color: #999;
+      margin-top: 5px;
+    }
+
+    button.generate {
+      width: 100%;
+      padding: 12px;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-top: 4px;
+    }
+
+    button.generate:hover { background: #333; }
+    button.generate:active { background: #000; }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .results-header h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .results-header span {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .copy-all-btn {
+      background: none;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #555;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .copy-all-btn:hover { border-color: #1a1a1a; color: #1a1a1a; }
+
+    .email-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .email-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: #fafafa;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      transition: border-color 0.15s;
+    }
+
+    .email-row:hover { border-color: #ccc; }
+
+    .email-row.copied {
+      border-color: #22c55e;
+      background: #f0fdf4;
+    }
+
+    .email-text {
+      font-size: 13px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      color: #1a1a1a;
+      word-break: break-all;
+    }
+
+    .email-text .local { color: #1a1a1a; }
+    .email-text .at { color: #999; }
+    .email-text .domain { color: #888; }
+
+    .copy-btn {
+      flex-shrink: 0;
+      margin-left: 12px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #bbb;
+      font-size: 13px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .copy-btn:hover { color: #1a1a1a; background: #eee; }
+
+    .copy-btn.done { color: #22c55e; }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px 0;
+      color: #aaa;
+      font-size: 13px;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 500;
+      color: #999;
+      background: #f0f0f0;
+      border-radius: 4px;
+      padding: 2px 6px;
+      margin-left: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Cold Email Configurator</h1>
+      <p>Generate every likely work email format for a contact.</p>
+    </header>
+
+    <div class="card">
+      <div class="fields">
+        <div>
+          <label>First Name</label>
+          <input type="text" id="firstName" placeholder="John" autocomplete="off">
+        </div>
+        <div>
+          <label>Last Name</label>
+          <input type="text" id="lastName" placeholder="Doe" autocomplete="off">
+        </div>
+        <div class="field-full">
+          <label>Company Email Structure</label>
+          <input type="text" id="emailStructure" placeholder="firstname.lastname@company.com" autocomplete="off">
+          <p class="hint">Any example email or just the domain — we extract the domain automatically.</p>
+        </div>
+      </div>
+      <button class="generate" onclick="generate()">Generate Email Combinations</button>
+    </div>
+
+    <div class="card" id="resultsCard" style="display:none">
+      <div class="results-header">
+        <h2>Email Combinations <span id="countBadge"></span></h2>
+        <button class="copy-all-btn" onclick="copyAll()">Copy All</button>
+      </div>
+      <div class="email-list" id="emailList"></div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') generate();
+    });
+
+    function extractDomain(input) {
+      const trimmed = input.trim();
+      const atIdx = trimmed.indexOf('@');
+      if (atIdx !== -1) return trimmed.slice(atIdx + 1).toLowerCase();
+      return trimmed.replace(/^https?:\/\//, '').replace(/\/.*$/, '').toLowerCase();
+    }
+
+    function slugify(str) {
+      return str.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    function generate() {
+      const first = slugify(document.getElementById('firstName').value);
+      const last = slugify(document.getElementById('lastName').value);
+      const structureInput = document.getElementById('emailStructure').value.trim();
+
+      if (!first || !last || !structureInput) {
+        shake(document.querySelector('.card'));
+        return;
+      }
+
+      const domain = extractDomain(structureInput);
+      if (!domain || !domain.includes('.')) {
+        shake(document.querySelector('.card'));
+        return;
+      }
+
+      const f = first[0];
+      const l = last[0];
+
+      const patterns = [
+        { local: `${first}.${last}`,  label: '' },
+        { local: `${first}${last}`,   label: '' },
+        { local: `${f}.${last}`,      label: '' },
+        { local: `${f}${last}`,       label: '' },
+        { local: `${first}.${l}`,     label: '' },
+        { local: `${first}${l}`,      label: '' },
+        { local: `${first}`,          label: '' },
+        { local: `${last}`,           label: '' },
+        { local: `${last}.${first}`,  label: '' },
+        { local: `${last}${first}`,   label: '' },
+        { local: `${last}.${f}`,      label: '' },
+        { local: `${last}${f}`,       label: '' },
+        { local: `${first}_${last}`,  label: '' },
+        { local: `${f}_${last}`,      label: '' },
+        { local: `${f}.${l}`,         label: '' },
+        { local: `${f}${l}`,          label: '' },
+      ];
+
+      const seen = new Set();
+      const emails = patterns
+        .map(p => ({ ...p, email: `${p.local}@${domain}` }))
+        .filter(p => {
+          if (seen.has(p.email)) return false;
+          seen.add(p.email);
+          return true;
+        });
+
+      renderResults(emails, domain);
+    }
+
+    function renderResults(emails, domain) {
+      const card = document.getElementById('resultsCard');
+      const list = document.getElementById('emailList');
+      const badge = document.getElementById('countBadge');
+
+      badge.textContent = `— ${emails.length} variants`;
+      list.innerHTML = '';
+
+      emails.forEach((item, i) => {
+        const row = document.createElement('div');
+        row.className = 'email-row';
+        row.id = `row-${i}`;
+
+        const [local, dom] = item.email.split('@');
+        row.innerHTML = `
+          <span class="email-text">
+            <span class="local">${local}</span><span class="at">@</span><span class="domain">${dom}</span>
+          </span>
+          <button class="copy-btn" onclick="copyEmail('${item.email}', ${i})" title="Copy">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+            </svg>
+          </button>
+        `;
+        list.appendChild(row);
+      });
+
+      card.style.display = 'block';
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function copyEmail(email, index) {
+      navigator.clipboard.writeText(email).then(() => {
+        const row = document.getElementById(`row-${index}`);
+        const btn = row.querySelector('.copy-btn');
+        row.classList.add('copied');
+        btn.classList.add('done');
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+        setTimeout(() => {
+          row.classList.remove('copied');
+          btn.classList.remove('done');
+          btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>`;
+        }, 1800);
+      });
+    }
+
+    function copyAll() {
+      const rows = document.querySelectorAll('.email-text');
+      const all = Array.from(rows).map(r => r.textContent.trim()).join('\n');
+      navigator.clipboard.writeText(all).then(() => {
+        const btn = document.querySelector('.copy-all-btn');
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.style.borderColor = '#22c55e';
+        btn.style.color = '#22c55e';
+        setTimeout(() => {
+          btn.textContent = orig;
+          btn.style.borderColor = '';
+          btn.style.color = '';
+        }, 1800);
+      });
+    }
+
+    function shake(el) {
+      el.animate([
+        { transform: 'translateX(0)' },
+        { transform: 'translateX(-6px)' },
+        { transform: 'translateX(6px)' },
+        { transform: 'translateX(-4px)' },
+        { transform: 'translateX(4px)' },
+        { transform: 'translateX(0)' },
+      ], { duration: 300, easing: 'ease-in-out' });
+    }
+  </script>
+</body>
+</html>
